@@ -110,8 +110,9 @@ class FileSystemChecker:
         for archivo in archivos_requeridos:
             if archivo.lower() not in archivos_normalizados:
                 faltantes.append(archivo.upper())
-        if faltantes:
-            self.archivos_faltantes[profesional][identificador] = faltantes
+
+        # Registrar los archivos faltantes, incluso si no hay ninguno
+        self.archivos_faltantes[profesional][identificador] = faltantes
 
 
 class ReportGenerator:
@@ -152,9 +153,11 @@ class ReportGenerator:
         mensajes_pendientes = []
         print(f"\n{Fore.BLUE}Pendientes por Profesional:{Style.RESET_ALL}")
         for profesional in self.profesionales_dict.keys():
-            print(f"\n{Fore.GREEN}Profesional: {profesional}{Style.RESET_ALL}")
             total_carpetas_faltantes = 0
             total_archivos_faltantes = 0
+            mensajes_profesional = []
+
+            # Manejar carpetas no encontradas
             if self.carpetas_no_encontradas.get(profesional):
                 mensaje_carpetas = (
                     f"{Fore.RED}Carpetas no encontradas para {profesional}:{Style.RESET_ALL}"
@@ -162,22 +165,30 @@ class ReportGenerator:
                 for identificador in self.carpetas_no_encontradas[profesional]:
                     mensaje_carpetas += f"\n  - {identificador}"
                     total_carpetas_faltantes += 1
-                mensajes_pendientes.append(mensaje_carpetas)
+                mensajes_profesional.append(mensaje_carpetas)
+
+            # Manejar archivos faltantes o completos
             if self.archivos_faltantes.get(profesional):
-                mensaje_archivos = f"{Fore.YELLOW}Archivos faltantes en carpetas encontradas para {profesional}:{Style.RESET_ALL}"
                 for identificador, faltantes in self.archivos_faltantes[profesional].items():
-                    mensaje_archivos += f"\n  - En la carpeta {Fore.CYAN}{identificador}{Style.RESET_ALL} faltan los siguientes archivos:"
-                    total_archivos_faltantes += len(faltantes)
-                    for archivo_faltante in faltantes:
-                        mensaje_archivos += f"\n    * {Fore.YELLOW}{archivo_faltante}{Style.RESET_ALL}"
-                mensajes_pendientes.append(mensaje_archivos)
+                    if not faltantes:
+                        mensajes_profesional.append(
+                            f"{Fore.GREEN}Todos los archivos están presentes para {profesional} - {identificador}.{Style.RESET_ALL}"
+                        )
+                    else:
+                        mensaje_archivos = f"{Fore.YELLOW}Archivos faltantes en la carpeta {Fore.CYAN}{identificador}{Style.RESET_ALL} para {profesional}:{Style.RESET_ALL}"
+                        total_archivos_faltantes += len(faltantes)
+                        for archivo_faltante in faltantes:
+                            mensaje_archivos += f"\n    * {Fore.YELLOW}{archivo_faltante}{Style.RESET_ALL}"
+                        mensajes_profesional.append(mensaje_archivos)
+
             if not total_carpetas_faltantes and not total_archivos_faltantes:
-                mensajes_pendientes.append(
+                mensajes_profesional.append(
                     f"{Fore.GREEN}No hay pendientes para el profesional {profesional}.{Style.RESET_ALL}"
                 )
-            mensajes_pendientes.append(
+            mensajes_profesional.append(
                 f"{Fore.YELLOW}Total de pendientes para {Fore.GREEN}{profesional}{Style.RESET_ALL}: {total_carpetas_faltantes} carpetas y {total_archivos_faltantes} archivos.{Style.RESET_ALL}"
             )
+            mensajes_pendientes.extend(mensajes_profesional)
         return mensajes_pendientes
 
 
@@ -209,7 +220,10 @@ class VerificadorArchivos:
 
 def main():
     print("=== Verificación de Archivos ===\n")
-    rutas_input = r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\SAN JOSÉ DEL GUAVIARE\ZONA 1\Familias, C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\SAN JOSÉ DEL GUAVIARE\ZONA 2\Familias"
+    rutas_input = (
+        r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\SAN JOSÉ DEL GUAVIARE\ZONA 1\Familias, "
+        r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\SAN JOSÉ DEL GUAVIARE\ZONA 2\Familias"
+    )
     rutas = [ruta.strip() for ruta in rutas_input.split(",") if ruta.strip()]
     if not rutas:
         print(f"{Fore.RED}Error: No se ingresó ninguna ruta válida.{Style.RESET_ALL}")
