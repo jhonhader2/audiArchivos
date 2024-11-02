@@ -99,10 +99,15 @@ class FileSystemChecker:
     ):
         archivos = os.listdir(ruta_carpeta)
         archivos_normalizados = [f.lower() for f in archivos]
-        archivos_requeridos = [f"av_{identificador}.pdf", f"fc_{identificador}.pdf"]
+        # Nombres de archivos según su código original
+        archivos_requeridos = [
+            f"av_{identificador}.pdf",
+            f"fc_{identificador}.pdf",
+        ]
+        formatos_imagen = [".jpeg", ".jpg", ".png", ".gif", ".bmp"]
         foto_encontrada = any(
             f"f_{identificador}{ext}".lower() in archivos_normalizados
-            for ext in [".jpeg", ".jpg", ".png", ".gif", ".bmp"]
+            for ext in formatos_imagen
         )
         faltantes = []
         if not foto_encontrada:
@@ -138,9 +143,7 @@ class ReportGenerator:
 
     def generar_reporte(self):
         self._mostrar_resumen_general()
-        mensajes_pendientes = self._generar_mensajes_pendientes()
-        for mensaje in mensajes_pendientes:
-            print(mensaje)
+        self._generar_mensajes_pendientes()
         print(f"\n{Fore.BLUE}Proceso completado.{Style.RESET_ALL}")
 
     def _mostrar_resumen_general(self):
@@ -149,47 +152,46 @@ class ReportGenerator:
         print(f"Total de carpetas encontradas: {self.total_carpetas_encontradas}")
         print(f"Total de carpetas no encontradas: {self.total_carpetas_no_encontradas}")
 
-    def _generar_mensajes_pendientes(self) -> List[str]:
-        mensajes_pendientes = []
-        print(f"\n{Fore.BLUE}Pendientes por Profesional:{Style.RESET_ALL}")
+    def _generar_mensajes_pendientes(self):
+        print(f"\n{Fore.BLUE}Pendientes agrupados por Profesional:{Style.RESET_ALL}")
         for profesional in self.profesionales_dict.keys():
+            print(f"\n{Fore.GREEN}Profesional: {profesional}{Style.RESET_ALL}")
             total_carpetas_faltantes = 0
             total_archivos_faltantes = 0
-            mensajes_profesional = []
 
             # Manejar carpetas no encontradas
             if self.carpetas_no_encontradas.get(profesional):
-                mensaje_carpetas = (
+                print(
                     f"{Fore.RED}Carpetas no encontradas para {profesional}:{Style.RESET_ALL}"
                 )
                 for identificador in self.carpetas_no_encontradas[profesional]:
-                    mensaje_carpetas += f"\n  - {identificador}"
+                    print(f"  - {identificador}")
                     total_carpetas_faltantes += 1
-                mensajes_profesional.append(mensaje_carpetas)
 
             # Manejar archivos faltantes o completos
             if self.archivos_faltantes.get(profesional):
                 for identificador, faltantes in self.archivos_faltantes[profesional].items():
                     if not faltantes:
-                        mensajes_profesional.append(
-                            f"{Fore.GREEN}Todos los archivos están presentes para {profesional} - {identificador}.{Style.RESET_ALL}"
+                        print(
+                            f"{Fore.GREEN}Todos los archivos están presentes para {identificador}.{Style.RESET_ALL}"
                         )
                     else:
-                        mensaje_archivos = f"{Fore.YELLOW}Archivos faltantes en la carpeta {Fore.CYAN}{identificador}{Style.RESET_ALL} para {profesional}:{Style.RESET_ALL}"
+                        print(
+                            f"{Fore.YELLOW}Archivos faltantes en la carpeta {Fore.CYAN}{identificador}{Style.RESET_ALL}:"
+                        )
                         total_archivos_faltantes += len(faltantes)
                         for archivo_faltante in faltantes:
-                            mensaje_archivos += f"\n    * {Fore.YELLOW}{archivo_faltante}{Style.RESET_ALL}"
-                        mensajes_profesional.append(mensaje_archivos)
+                            print(f"    * {Fore.YELLOW}{archivo_faltante}{Style.RESET_ALL}")
 
             if not total_carpetas_faltantes and not total_archivos_faltantes:
-                mensajes_profesional.append(
+                print(
                     f"{Fore.GREEN}No hay pendientes para el profesional {profesional}.{Style.RESET_ALL}"
                 )
-            mensajes_profesional.append(
-                f"{Fore.YELLOW}Total de pendientes para {Fore.GREEN}{profesional}{Style.RESET_ALL}: {total_carpetas_faltantes} carpetas y {total_archivos_faltantes} archivos.{Style.RESET_ALL}"
+
+            print(
+                f"{Fore.YELLOW}Total de pendientes para {Fore.GREEN}{profesional}{Style.RESET_ALL}: "
+                f"{total_carpetas_faltantes} carpetas y {total_archivos_faltantes} archivos.{Style.RESET_ALL}"
             )
-            mensajes_pendientes.extend(mensajes_profesional)
-        return mensajes_pendientes
 
 
 class VerificadorArchivos:
