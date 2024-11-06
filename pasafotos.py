@@ -49,9 +49,12 @@ for index, row in df.iterrows():
         ruta_zona1 = os.path.join(ruta_municipios, municipio, "ZONA 1")
         ruta_zona2 = os.path.join(ruta_municipios, municipio, "ZONA 2")
 
+        # Inicializar banderas de encontrado
+        encontrado_zona1 = False
+        encontrado_zona2 = False
+
         # Buscar en ZONA 1
         if os.path.exists(ruta_zona1):
-            encontrado_zona1 = False
             for carpeta_raiz, carpetas, _ in os.walk(ruta_zona1):
                 # Verificar si la carpeta del número de documento existe
                 ruta_familia_zona1 = os.path.join(carpeta_raiz, numero_documento)
@@ -61,12 +64,8 @@ for index, row in df.iterrows():
                     encontrado_zona1 = True
                     break  # Salir del bucle si se encuentra la carpeta
 
-            if not encontrado_zona1:
-                print(f"La carpeta con el número de documento {numero_documento} no existe en ZONA 1 para el profesional {nombre_profesional}.")
-
-        # Buscar en ZONA 2
-        if os.path.exists(ruta_zona2):
-            encontrado_zona2 = False
+        # Buscar en ZONA 2 solo si no se encontró en ZONA 1
+        if not encontrado_zona1 and os.path.exists(ruta_zona2):
             for carpeta_raiz, carpetas, _ in os.walk(ruta_zona2):
                 # Verificar si la carpeta del número de documento existe
                 ruta_familia_zona2 = os.path.join(carpeta_raiz, numero_documento)
@@ -76,8 +75,9 @@ for index, row in df.iterrows():
                     encontrado_zona2 = True
                     break  # Salir del bucle si se encuentra la carpeta
 
-            if not encontrado_zona2:
-                print(f"La carpeta con el número de documento {numero_documento} no existe en ZONA 2 para el profesional {nombre_profesional}.")
+        # Si no se encontró en ninguna zona, mostrar mensaje de error
+        if not encontrado_zona1 and not encontrado_zona2:
+            print(Fore.RED + f"La carpeta con el número de documento {numero_documento} no existe en ninguna de las zonas para el profesional {nombre_profesional}.")
 
 # Imprimir totales encontrados
 print(f"\nTotal de carpetas encontradas en ZONA 1: {total_encontradas_zona1}")
