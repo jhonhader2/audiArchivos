@@ -70,6 +70,16 @@ for index, row in df.iterrows():
                         print(Fore.GREEN + f"La carpeta con el número de documento {numero_documento} existe en ZONA 1 para el profesional {nombre_profesional}.")
                         total_encontradas_zona1 += 1  # Incrementar contador
                         encontrado_zona1 = True
+                        
+                        # Buscar el archivo de imagen en la carpeta encontrada
+                        for ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp']:  # Lista de extensiones de imagen
+                            archivo_imagen = os.path.join(carpeta_raiz, carpeta, f"F_{numero_documento}{ext}")
+                            if os.path.exists(archivo_imagen):
+                                print(Fore.CYAN + f"El archivo de imagen {archivo_imagen} se encontró para el profesional {nombre_profesional}.")
+                                break  # Salir del bucle si se encuentra el archivo
+                        else:
+                            print(f"No se encontró el archivo de imagen para el profesional {nombre_profesional}.")
+                        
                         break  # Salir del bucle si se encuentra la carpeta
                 if encontrado_zona1:
                     break  # Salir del bucle de os.walk si se encontró
@@ -83,6 +93,16 @@ for index, row in df.iterrows():
                         print(Fore.GREEN + f"La carpeta con el número de documento {numero_documento} existe en ZONA 2 para el profesional {nombre_profesional}.")
                         total_encontradas_zona2 += 1  # Incrementar contador
                         encontrado_zona2 = True
+                        
+                        # Buscar el archivo de imagen en la carpeta encontrada
+                        for ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp']:  # Lista de extensiones de imagen
+                            archivo_imagen = os.path.join(carpeta_raiz, carpeta, f"F_{numero_documento}{ext}")
+                            if os.path.exists(archivo_imagen):
+                                print(Fore.CYAN + f"El archivo de imagen {archivo_imagen} se encontró para el profesional {nombre_profesional}.")
+                                break  # Salir del bucle si se encuentra el archivo
+                        else:
+                            print(f"No se encontró el archivo de imagen para el profesional {nombre_profesional}.")
+                        
                         break  # Salir del bucle si se encuentra la carpeta
                 if encontrado_zona2:
                     break  # Salir del bucle de os.walk si se encontró
