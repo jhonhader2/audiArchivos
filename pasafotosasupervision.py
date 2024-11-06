@@ -5,6 +5,7 @@ from colorama import init, Fore
 from abc import ABC, abstractmethod
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
+import shutil
 
 # Inicializar colorama
 init(autoreset=True)
@@ -316,7 +317,14 @@ class Processor(IProcessor):
                                 primer_apellido = nombre_profesional.split()[-1]
 
                             nuevo_nombre_archivo = f"{primer_nombre}_{primer_apellido}{os.path.splitext(archivo)[1]}"
-                            self.logger.yellow(f"El nuevo nombre del archivo sería: {nuevo_nombre_archivo}")
+                            nueva_ruta = os.path.join(ruta_regional, municipio, nombre_profesional, nuevo_nombre_archivo)
+
+                            # Verificar si el archivo ya existe
+                            if os.path.exists(nueva_ruta):
+                                self.logger.yellow(f"El archivo {nuevo_nombre_archivo} ya existe. Se omite la copia.")
+                            else:
+                                shutil.copy2(archivo, nueva_ruta)  # Copiar el archivo
+                                self.logger.cyan(f"Imagen copiada a: {nueva_ruta}")
                         else:
                             self.logger.error(
                                 f"No se encontró el archivo de imagen para el profesional {nombre_profesional} en la carpeta: {carpeta}."
