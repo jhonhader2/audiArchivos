@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import re
 from colorama import init, Fore
 
 # Inicializar colorama
@@ -37,7 +38,14 @@ for index, row in df.iterrows():
         print(f"Falta el número de documento en la fila {index + 1}: {row}")
         continue
     else:
+        # Extraer solo la parte numérica del número de documento
         numero_documento = str(numero_documento).replace('.0', '')  # Convertir a cadena y quitar ".0"
+        numero_documento = re.match(r'(\d+)', numero_documento)  # Extraer solo la parte numérica
+        if numero_documento:
+            numero_documento = numero_documento.group(1)  # Obtener el grupo numérico
+        else:
+            print(f"Número de documento no válido en la fila {index + 1}: {row}")
+            continue
 
     if not nombre_profesional:
         print(f"Falta información en la fila {index + 1}: {row}")
@@ -56,24 +64,28 @@ for index, row in df.iterrows():
         # Buscar en ZONA 1
         if os.path.exists(ruta_zona1):
             for carpeta_raiz, carpetas, _ in os.walk(ruta_zona1):
-                # Verificar si la carpeta del número de documento existe
-                ruta_familia_zona1 = os.path.join(carpeta_raiz, numero_documento)
-                if os.path.exists(ruta_familia_zona1):
-                    print(Fore.GREEN + f"La carpeta con el número de documento {numero_documento} existe en ZONA 1 para el profesional {nombre_profesional}.")
-                    total_encontradas_zona1 += 1  # Incrementar contador
-                    encontrado_zona1 = True
-                    break  # Salir del bucle si se encuentra la carpeta
+                # Verificar si alguna carpeta comienza con el número de documento
+                for carpeta in carpetas:
+                    if carpeta.startswith(numero_documento):
+                        print(Fore.GREEN + f"La carpeta con el número de documento {numero_documento} existe en ZONA 1 para el profesional {nombre_profesional}.")
+                        total_encontradas_zona1 += 1  # Incrementar contador
+                        encontrado_zona1 = True
+                        break  # Salir del bucle si se encuentra la carpeta
+                if encontrado_zona1:
+                    break  # Salir del bucle de os.walk si se encontró
 
         # Buscar en ZONA 2 solo si no se encontró en ZONA 1
         if not encontrado_zona1 and os.path.exists(ruta_zona2):
             for carpeta_raiz, carpetas, _ in os.walk(ruta_zona2):
-                # Verificar si la carpeta del número de documento existe
-                ruta_familia_zona2 = os.path.join(carpeta_raiz, numero_documento)
-                if os.path.exists(ruta_familia_zona2):
-                    print(Fore.GREEN + f"La carpeta con el número de documento {numero_documento} existe en ZONA 2 para el profesional {nombre_profesional}.")
-                    total_encontradas_zona2 += 1  # Incrementar contador
-                    encontrado_zona2 = True
-                    break  # Salir del bucle si se encuentra la carpeta
+                # Verificar si alguna carpeta comienza con el número de documento
+                for carpeta in carpetas:
+                    if carpeta.startswith(numero_documento):
+                        print(Fore.GREEN + f"La carpeta con el número de documento {numero_documento} existe en ZONA 2 para el profesional {nombre_profesional}.")
+                        total_encontradas_zona2 += 1  # Incrementar contador
+                        encontrado_zona2 = True
+                        break  # Salir del bucle si se encuentra la carpeta
+                if encontrado_zona2:
+                    break  # Salir del bucle de os.walk si se encontró
 
         # Si no se encontró en ninguna zona, mostrar mensaje de error
         if not encontrado_zona1 and not encontrado_zona2:
