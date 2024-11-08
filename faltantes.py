@@ -18,21 +18,63 @@ class ExcelDataLoader:
         self.excel_path = excel_path
         self.profesionales_dict: DefaultDict[str, List[str]] = defaultdict(list)
 
+    
     def load_data(self) -> bool:
         try:
-            df = pd.read_excel(self.excel_path, header=9)
+            # Cargar la hoja 'Consolidado'
+            df = pd.read_excel(self.excel_path, sheet_name='Consolidado')
             df.columns = df.columns.str.strip()
+            
+            # Mantener las columnas relevantes, incluyendo el nuevo campo
             df = df[
                 [
-                    "NÚMERO DE DOCUMENTO DEL JEFE DE GRUPO FAMILIAR",
-                    "NOMBRE COMPLETO DEL PROFESIONAL",
+                    "NÚMERO DE DOCUMENTO DE IDENTIDAD",
+                    "NUMERO DE DOCUMENTO DEL BENEFICIARIO QUE EJERCE LA JEFATURA DEL SISTEMA FAMILIAR",
+                    "NOMBRE COMPLETO (NOMBRES APELLIDOS) DEL RESPONSABLE DE LA BUSQUEDA Y VINCULACIÓN DE LA FAMILIA",
+                    "¿ACEPTÓ PERTENECER AL PROGRAMA?"
                 ]
             ]
-            df.dropna(subset=["NÚMERO DE DOCUMENTO DEL JEFE DE GRUPO FAMILIAR"], inplace=True)
+            
+            # Eliminar filas donde ambas columnas clave son NaN
+            df.dropna(subset=[
+                "NÚMERO DE DOCUMENTO DE IDENTIDAD",
+                "NUMERO DE DOCUMENTO DEL BENEFICIARIO QUE EJERCE LA JEFATURA DEL SISTEMA FAMILIAR"
+            ], how='all', inplace=True)
+            
+            # Filtrar los registros donde "¿ACEPTÓ PERTENECER AL PROGRAMA?" es "SI"
+            df["¿ACEPTÓ PERTENECER AL PROGRAMA?"] = df["¿ACEPTÓ PERTENECER AL PROGRAMA?"].astype(str).str.strip().str.upper()
+            df = df[df["¿ACEPTÓ PERTENECER AL PROGRAMA?"] == "SI"]
+            
+            # Asegurarse de que los números de documento sean cadenas sin decimales
+            df["NÚMERO DE DOCUMENTO DE IDENTIDAD"] = df["NÚMERO DE DOCUMENTO DE IDENTIDAD"].astype(str).str.split('.').str[0]
+            df["NUMERO DE DOCUMENTO DEL BENEFICIARIO QUE EJERCE LA JEFATURA DEL SISTEMA FAMILIAR"] = df["NUMERO DE DOCUMENTO DEL BENEFICIARIO QUE EJERCE LA JEFATURA DEL SISTEMA FAMILIAR"].astype(str).str.split('.').str[0]
+            
+            # Contadores para los registros
+            contador_identidad = 0
+            contador_beneficiario = 0
+            
+            # Poblar el diccionario de profesionales
             for _, row in df.iterrows():
-                identificador = str(row["NÚMERO DE DOCUMENTO DEL JEFE DE GRUPO FAMILIAR"]).strip()
-                profesional = str(row["NOMBRE COMPLETO DEL PROFESIONAL"]).strip()
+                identificador_identidad = str(row["NÚMERO DE DOCUMENTO DE IDENTIDAD"]).strip()
+                identificador_beneficiario = str(row["NUMERO DE DOCUMENTO DEL BENEFICIARIO QUE EJERCE LA JEFATURA DEL SISTEMA FAMILIAR"]).strip()
+                profesional = str(row["NOMBRE COMPLETO (NOMBRES APELLIDOS) DEL RESPONSABLE DE LA BUSQUEDA Y VINCULACIÓN DE LA FAMILIA"]).strip()
+        
+                if identificador_identidad and identificador_identidad.lower() != 'nan':
+                    identificador = identificador_identidad
+                    contador_identidad += 1
+                elif identificador_beneficiario and identificador_beneficiario.lower() != 'nan':
+                    identificador = identificador_beneficiario
+                    contador_beneficiario += 1
+                else:
+                    continue  # No hay identificador válido
+        
+                # Agregar al diccionario de profesionales
                 self.profesionales_dict[profesional].append(identificador)
+        
+            # Mostrar los contadores
+            print(f"Total de registros con 'NÚMERO DE DOCUMENTO DE IDENTIDAD': {contador_identidad}")
+            print(f"Total de registros con 'NUMERO DE DOCUMENTO DEL BENEFICIARIO QUE EJERCE LA JEFATURA DEL SISTEMA FAMILIAR': {contador_beneficiario}")
+        
             return True
         except FileNotFoundError:
             print(
@@ -155,7 +197,7 @@ class ReportGenerator:
     def _generar_mensajes_pendientes(self):
         print(f"\n{Fore.BLUE}Pendientes agrupados por Profesional:{Style.RESET_ALL}")
         for profesional in self.profesionales_dict.keys():
-            print(f"\n{Fore.GREEN}Profesional: {profesional}{Style.RESET_ALL}")
+            print(f"\n{Style.RESET_ALL}Profesional: {profesional}{Style.RESET_ALL}")
             total_carpetas_faltantes = 0
             total_archivos_faltantes = 0
 
@@ -173,7 +215,7 @@ class ReportGenerator:
                 for identificador, faltantes in self.archivos_faltantes[profesional].items():
                     if not faltantes:
                         print(
-                            f"{Fore.GREEN}Todos los archivos están presentes para {identificador}.{Style.RESET_ALL}"
+                            f"{Fore.GREEN}Todos los archivos están presentes para la carpeta {Fore.CYAN}{identificador}{Style.RESET_ALL}."
                         )
                     else:
                         print(
@@ -189,7 +231,7 @@ class ReportGenerator:
                 )
 
             print(
-                f"{Fore.YELLOW}Total de pendientes para {Fore.GREEN}{profesional}{Style.RESET_ALL}: "
+                f"{Fore.YELLOW}Total de pendientes para {Style.RESET_ALL}{profesional}{Fore.YELLOW}{Style.RESET_ALL}: "
                 f"{total_carpetas_faltantes} carpetas y {total_archivos_faltantes} archivos.{Style.RESET_ALL}"
             )
 
@@ -230,7 +272,7 @@ def main():
     if not rutas:
         print(f"{Fore.RED}Error: No se ingresó ninguna ruta válida.{Style.RESET_ALL}")
         return
-    archivo_excel = r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\REPORTES NACIONAL\20241020\f4.mo31.pp_formato_seguimiento_sfsc_v2_20241010.xlsx"
+    archivo_excel = r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Bases\FH_CONSOLIDADO.xlsx"
     if not os.path.isfile(archivo_excel):
         print(f"{Fore.RED}Error: El archivo Excel '{archivo_excel}' no existe.{Style.RESET_ALL}")
         return
