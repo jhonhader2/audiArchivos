@@ -22,7 +22,7 @@ class ExcelDataLoader:
     def load_data(self) -> bool:
         try:
             # Cargar la hoja 'Consolidado'
-            df = pd.read_excel(self.excel_path, sheet_name='Consolidado')
+            df = pd.read_excel(self.excel_path, sheet_name='CONSOLIDADO')
             df.columns = df.columns.str.strip()
             
             # Mantener las columnas relevantes, incluyendo el nuevo campo
