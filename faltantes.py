@@ -266,7 +266,9 @@ def main():
     print("=== Verificación de Archivos ===\n")
     rutas_input = (
         r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\SAN JOSÉ DEL GUAVIARE\ZONA 1\Familias, "
-        r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\SAN JOSÉ DEL GUAVIARE\ZONA 2\Familias"
+        r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\SAN JOSÉ DEL GUAVIARE\ZONA 2\Familias,  "
+        r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\CALAMAR\ZONA 1\Familias, "
+        r"C:\Users\jhonh\OneDrive - Instituto Colombiano de Bienestar Familiar\SFSC\2024\Repositorio\MUNICIPIOS\EL RETORNO\ZONA 1\Familias"
     )
     rutas = [ruta.strip() for ruta in rutas_input.split(",") if ruta.strip()]
     if not rutas:
